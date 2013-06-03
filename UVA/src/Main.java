@@ -1,66 +1,99 @@
+import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 
 public class Main {
-	public static void main (String ... args) throws FileNotFoundException {
+	public static void main(String... args) throws FileNotFoundException {
 		Scanner sc = new Scanner(new File("input"));
 		
-		int numTests = Integer.parseInt(sc.nextLine());
-		for(int i = 0; i < numTests; ++i) {
-			// Read in an empty line.
-			sc.nextLine();
-			// Read in row/col pair.
+		while(sc.hasNextLine()) {
 			String [] line = sc.nextLine().split("\\s");
-			int rows = Integer.parseInt(line[0]);
-			int cols = Integer.parseInt(line[1]);
-			char[][] playGround = readMatrix(sc, rows, cols);
-			
-			print(playGround);
-			
-			line = sc.nextLine().split("\\s");
-			int xStart = Integer.parseInt(line[0]);
-			int yStart = Integer.parseInt(line[1]);
-			
-			// Read queries and print answers.
-			while(sc.hasNextLine()) {
-				String eachQuery = sc.nextLine();
-				if(eachQuery == null || eachQuery.length() == 1) {
-					break;
-				}
-				
-				processQuery(playGround, line);
+			if(".".equals(line[0])) {
+				break;
 			}
-		}		
+			
+			if("!".equals(line[0])) {
+				processAssertion(line);
+			} else if("?".equals(line[0])) {
+				processQuery(line);
+			}
+		}
+	}
+
+	private static void processQuery(String[] line) {
+		// ? sock = shirt
+	}
+
+	private static void processAssertion(String[] line) {
+		// ! 6 shirt = 15 sock
+		
+	}
+}
+
+class Digraph {
+	Map<String, List<Edge>> adjList;
+	
+	public Digraph() {
+		this.adjList = new HashMap<String , List<Edge>>();
 	}
 	
-
-	private static void processQuery(char[][] playGround, String[] line) {
-				
+	public void addEdge(Edge e) {
+		// Add both Vertices into the Vertex set.
+		conditionalAddEdge(e.fromVert, e);
+		conditionalAddEdge(e.toVert, e);
 	}
 
-
-	private static void print(char[][] playGround) {
-		for(int i = 0; i < playGround.length; ++i) {
-			for(int j = 0; j < playGround[i].length; ++j) {
-			System.out.print(playGround[i][j]);	
-			}
-			System.out.println();
+	private void conditionalAddEdge(String vertName, Edge e) {		
+		List<Edge> edges = new ArrayList<Edge>();
+		if(!this.adjList.containsKey(vertName)) {			
+			edges.add(e);
+			this.adjList.put(vertName, edges);
+		} else {
+			edges = this.adjList.get(vertName);
+			edges.add(e);
 		}
 	}
 
+	public Iterable<Edge> getAdjVerts(String vertName) {
+		return this.adjList.get(vertName);
+	}
+	
+}
 
-	private static char[][] readMatrix(Scanner sc, int rows, int cols) {
-		char[][] grid = new char[rows][cols];
-		for(int i = 0; i < rows; ++i) {
-			String line = sc.nextLine();
-			for(int j = 0; j < line.length(); ++j) {
-				grid[i][j] = line.charAt(j);
-			}
-		}
+class Edge {
+	String fromVert;
+	String toVert;
+	Fraction weight;
+	
+	public Edge(String fromVert, String toVert, Fraction weight) {
+		this.fromVert = fromVert;
+		this.toVert = toVert;
+		this.weight = weight;		
+	}
+	
+}
+
+class Fraction {
+	int num;
+	int denum;
+	
+	public Fraction (int num, int denum) {
+		this.num = num;
+		this.denum = denum;
+		normalize();
+	}
+
+	private void normalize() {
+		// use GCD algo to bring num, denum to ...
 		
-		return grid;
 	}
+	
+	
 }
