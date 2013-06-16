@@ -1,187 +1,130 @@
-import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Scanner;
-
+import java.util.Set;
 
 public class Main {
-	static Digraph graph = new Digraph();
 	
 	public static void main(String... args) throws FileNotFoundException {
-		Scanner sc = new Scanner(new File("input"));
-		
-		while(sc.hasNextLine()) {
-			String [] line = sc.nextLine().split("\\s");
-			if(".".equals(line[0])) {
-				break;
-			}
+		//Scanner sc = new Scanner(new File("input"));
+		Scanner sc = new Scanner(System.in);
+		int caseCount = 1;
+		while(true) {			
+			int numPairs = sc.nextInt();
+			if(numPairs == 0) break;
+			Graph g = new Graph();
 			
-			if("!".equals(line[0])) {
-				addNewEdges(line);
-			} else if("?".equals(line[0])) {
-				processQuery(line);
+			for(int i = 0; i < numPairs; ++i) {
+				int fromVert = sc.nextInt(); 
+				int toVert = sc.nextInt();
+				g.addEdge(fromVert, toVert);
 			}
-		}
-	}
 
-	private static void processQuery(String[] line) {
-		// ? sock = shirt
-		// 0   1  2   3
-		String fromVert = line[1];
-		String toVert = line[3];
-		GraphProcessor processor = new GraphProcessor(graph, fromVert, toVert);
-		
-		if(processor.hasPath()) {
-			System.out.println(processor.getPath());
-		} else {
-			System.out.println("No path: " + fromVert + " -> " + toVert);
-		}
-	}
-
-	private static void addNewEdges(String[] line) {
-		// ! 6 shirt = 15 sock
-		// 0 1   2   3  4   5
-		Fraction weight = new Fraction(Integer.parseInt(line[4]), Integer.parseInt(line[1]));
-		Edge e = new Edge(line[2], line[5], weight);
-		graph.addEdge(e);
-		
-		// Add the reverse direction edge as well.
-		weight = new Fraction(Integer.parseInt(line[1]), Integer.parseInt(line[4]));
-		e = new Edge(line[5], line[2], weight);
-		graph.addEdge(e);
-	}
-}
-
-class Digraph {
-	Map<String, List<Edge>> adjList;
-	boolean marked[] ;
-	
-	public Digraph() {
-		this.adjList = new LinkedHashMap<String , List<Edge>>();
-	}
-	
-	public void addEdge(Edge e) {
-		// Add both Vertices into the Vertex set.
-		conditionalAddEdge(e);
-	}
-
-	private void conditionalAddEdge(Edge e) {		
-		List<Edge> edges = new ArrayList<Edge>();
-		if(!this.adjList.containsKey(e.fromVert)) {			
-			edges.add(e);
-			this.adjList.put(e.fromVert, edges);
-		} else {
-			edges = this.adjList.get(e.fromVert);
-			edges.add(e);
-		}
-	}
-
-	public Iterable<Edge> getAdjVerts(String vertName) {
-		return this.adjList.get(vertName);
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		for(String verts: this.adjList.keySet()) {
-			sb.append(verts + " : " + getAdjVerts(verts) + "\n");
-		}
-		
-		return sb.toString();
-	}
-
-}
-
-class Edge {
-	String fromVert;
-	String toVert;
-	Fraction weight;
-	
-	public Edge(String fromVert, String toVert, Fraction weight) {
-		this.fromVert = fromVert;
-		this.toVert = toVert;
-		this.weight = weight;		
-	}
-
-	@Override
-	public String toString() {
-		return "Edge [fromVert=" + fromVert + ", toVert=" + toVert
-				+ ", weight=" + weight + "]";
-	}
-}
-
-class Fraction {
-	int num;
-	int denum;
-	
-	public Fraction (int num, int denum) {
-		this.num = num;
-		this.denum = denum;
-		normalize();
-	}
-
-	private void normalize() {
-		// use GCD algo to bring num, denum to ...
-		
-	}
-
-	@Override
-	public String toString() {
-		return "[" + num + "/" + denum + "]";
-	}
-}
-
-class GraphProcessor {
-	Digraph graph;
-	String source;
-	String dest;
-	Map<String, Boolean> marked;
-	Map<String, String> edgeTo;
-	
-	public GraphProcessor(Digraph graph, String source, String dest) {
-		this.graph = graph;
-		this.source = source;
-		this.dest = dest;
-		this.marked = new HashMap<String, Boolean>(graph.adjList.size());
-		this.edgeTo = new HashMap<String, String>(graph.adjList.size());
-		
-		for(String eachVert : graph.adjList.keySet()) {
-			this.marked.put(eachVert, Boolean.FALSE);
-		}
-		this.edgeTo.put(source, null);
-		
-		dfs(source);
-	}
-	
-	public void dfs(String sourceVert) {
-		if(!this.marked.get(sourceVert)) {
-			this.marked.put(sourceVert, Boolean.TRUE);
-			for(Edge nextVert : graph.getAdjVerts(sourceVert)) {
-				if(!this.marked.get(nextVert.toVert)) {
-					this.edgeTo.put(nextVert.toVert, sourceVert);
-					dfs(nextVert.toVert);					
+			// Read the queries.
+			while(true) {
+				int sourceVert = sc.nextInt();
+				int distFromSourceVert = sc.nextInt();
+				if(sourceVert == 0 && distFromSourceVert == 0 ) {
+					break;
 				}
+				g.bfs(sourceVert);
+				
+				//Case 1: 5 nodes not reachable from node 35 with TTL = 2.
+				System.out.println("Case " + caseCount + ": " + g.getNumUnvisitedVerts(distFromSourceVert) +
+						" nodes not reachable from node " + sourceVert + " with TTL = " + distFromSourceVert + ".");
+				++caseCount;
+			}
+		}
+		sc.close();
+	}
+}
+
+class Graph {
+
+	private Map<Integer, List<Integer>> adjList;	
+	private Map<Integer, Integer> distToVert;	
+	private Queue<Integer> queue;
+	
+	public Graph() {
+		this.queue = new LinkedList<Integer>();		
+		this.adjList = new HashMap<Integer, List<Integer>>();
+	}
+		
+	public int getNumUnvisitedVerts(int distFromSourceVert) {
+		int counter = 0;
+		for(Integer vertsDist : this.distToVert.keySet()) {
+			if(this.distToVert.get(vertsDist) > distFromSourceVert) {
+				//System.out.println("Unreachable Verts: " + vertsDist);
+				++counter;
+			}
+		}
+		
+		return counter;
+	}
+
+	public void addEdge(int fromVert, int toVert) {
+		if(this.adjList.get(fromVert) == null) {
+			this.adjList.put(fromVert, new ArrayList<Integer>());
+		}
+		if(this.adjList.get(toVert) == null) {
+			this.adjList.put(toVert, new ArrayList<Integer>());
+		}
+		
+		this.adjList.get(fromVert).add(toVert);		
+		this.adjList.get(toVert).add(fromVert);
+	}
+	
+	public List<Integer> getAdjList(int vert) {
+		return this.adjList.get(vert);
+	}
+	
+	public void bfs(int sourceVert) {
+		reset();
+		this.queue.add(sourceVert);
+		this.distToVert.put(sourceVert, 0);
+		
+		while(!queue.isEmpty()) {
+			int currentVert = this.queue.poll();
+			
+			for(int nextVert : getAdjList(currentVert)) {
+				if(this.distToVert.get(nextVert) == null) {
+					queue.add(nextVert);
+					this.distToVert.put(nextVert, this.distToVert.get(currentVert) + 1);
+				}
+			}			
+		}
+		
+		// Check for unconnected components.
+		for(int verts: this.adjList.keySet()) {
+			if(distToVert.get(verts) == null) {
+				this.distToVert.put(verts, Integer.MAX_VALUE);
 			}
 		}
 	}
-	
-	public Boolean hasPath() {
-		return this.marked.get(dest);
+
+	private void reset() {
+		this.distToVert = new HashMap<Integer, Integer>();
 	}
 	
-	public String getPath() {
-		StringBuilder sb = new StringBuilder();
-		String pathPointer = this.dest;
-		while(pathPointer != null) {
-			sb.append(pathPointer + " -> ");
-			pathPointer = this.edgeTo.get(pathPointer);
-		}
-		return sb.toString();
+}
+
+class Pair {
+	int fromVert, toVert;
+	
+	public Pair(int from, int to) {
+		this.fromVert = from;
+		this.toVert = to;
 	}
+
+	@Override
+	public String toString() {
+		return "[" + fromVert + " -> " + toVert + "]";
+	}	
 }
