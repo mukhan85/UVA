@@ -1,45 +1,51 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Scanner;
-import java.util.Set;
 
 public class Main {
 	
 	public static void main(String... args) throws FileNotFoundException {
 		//Scanner sc = new Scanner(new File("input"));
 		Scanner sc = new Scanner(System.in);
-		int caseCount = 1;
-		while(true) {			
-			int numPairs = sc.nextInt();
-			if(numPairs == 0) break;
-			Graph g = new Graph();
-			
-			for(int i = 0; i < numPairs; ++i) {
-				int fromVert = sc.nextInt(); 
-				int toVert = sc.nextInt();
-				g.addEdge(fromVert, toVert);
+		int level, row, column;
+		while(true) {
+			String [] line = sc.nextLine().split("\\s");
+			if(line.length != 3) {
+				continue;
 			}
-
-			// Read the queries.
-			while(true) {
-				int sourceVert = sc.nextInt();
-				int distFromSourceVert = sc.nextInt();
-				if(sourceVert == 0 && distFromSourceVert == 0 ) {
-					break;
-				}
-				g.bfs(sourceVert);
+			level = Integer.parseInt(line[0]);
+			row = Integer.parseInt(line[1]);
+			column = Integer.parseInt(line[2]);
+			if(level == 0 && row == 0 && column == 0) {
+				break;
+			}
+			
+			Graph g = new Graph(level, row, column);
+			for(int i = 0; i < level; ++i) {
+				List<List<Character>> levelPlane = new ArrayList<List<Character>>();
+				g.grid.add(levelPlane);
 				
-				//Case 1: 5 nodes not reachable from node 35 with TTL = 2.
-				System.out.println("Case " + caseCount + ": " + g.getNumUnvisitedVerts(distFromSourceVert) +
-						" nodes not reachable from node " + sourceVert + " with TTL = " + distFromSourceVert + ".");
-				++caseCount;
+				for(int j = 0 ; j < row; ++j) {
+					String nextRow = sc.nextLine();
+					if(nextRow.length() == column) {
+						g.addEdge(i, j, nextRow);	
+					} else {					
+						--j;
+					}
+				}
+			}
+			int result = g.bfs();
+			if(result == -1) {
+				System.out.println("Trapped!");
+			} else {
+				System.out.println("Escaped in " + result + " minute(s).");
 			}
 		}
 		sc.close();
@@ -47,84 +53,155 @@ public class Main {
 }
 
 class Graph {
-
-	private Map<Integer, List<Integer>> adjList;	
-	private Map<Integer, Integer> distToVert;	
-	private Queue<Integer> queue;
 	
-	public Graph() {
-		this.queue = new LinkedList<Integer>();		
-		this.adjList = new HashMap<Integer, List<Integer>>();
-	}
-		
-	public int getNumUnvisitedVerts(int distFromSourceVert) {
-		int counter = 0;
-		for(Integer vertsDist : this.distToVert.keySet()) {
-			if(this.distToVert.get(vertsDist) > distFromSourceVert) {
-				//System.out.println("Unreachable Verts: " + vertsDist);
-				++counter;
+	List<List<List<Character>>> grid;
+	Vertex startPoint;
+	Vertex endPoint;
+	Queue<Vertex> queue;
+	int maxLevel, maxRow, maxColumn;
+	
+	int [][][] distTo;
+			
+	int [] posX = {0,  0, -1, 1,  0, 0};
+	int [] posY = {0,  0,  0, 0, -1, 1};
+	int [] posL = {1, -1,  0, 0,  0, 0};
+	
+	public Graph (int maxLevel, int maxRow, int maxColumn) {
+		grid = new ArrayList<List<List<Character>>>();
+		distTo = new int [30][30][30];
+		for(int[][] eachLevel : distTo) {
+			for(int [] rowLevel : eachLevel) {
+				Arrays.fill(rowLevel, -1);
 			}
 		}
 		
-		return counter;
-	}
-
-	public void addEdge(int fromVert, int toVert) {
-		if(this.adjList.get(fromVert) == null) {
-			this.adjList.put(fromVert, new ArrayList<Integer>());
-		}
-		if(this.adjList.get(toVert) == null) {
-			this.adjList.put(toVert, new ArrayList<Integer>());
-		}
-		
-		this.adjList.get(fromVert).add(toVert);		
-		this.adjList.get(toVert).add(fromVert);
+		queue = new LinkedList<Vertex>();
+		this.maxColumn = maxColumn;
+		this.maxLevel = maxLevel;
+		this.maxRow = maxRow;
 	}
 	
-	public List<Integer> getAdjList(int vert) {
-		return this.adjList.get(vert);
-	}
-	
-	public void bfs(int sourceVert) {
-		reset();
-		this.queue.add(sourceVert);
-		this.distToVert.put(sourceVert, 0);
+	public int bfs() {
+		queue.add(startPoint);
+		distTo[startPoint.level][startPoint.row][startPoint.column] = 0;
 		
 		while(!queue.isEmpty()) {
-			int currentVert = this.queue.poll();
+			Vertex currentVertex = queue.poll();
+			if(currentVertex.equals(endPoint)) {
+				return distTo[currentVertex.level][currentVertex.row][currentVertex.column];
+			}
 			
-			for(int nextVert : getAdjList(currentVert)) {
-				if(this.distToVert.get(nextVert) == null) {
-					queue.add(nextVert);
-					this.distToVert.put(nextVert, this.distToVert.get(currentVert) + 1);
+			for(int i = 0; i < 6; ++i) {
+				Vertex nextVertex = move(currentVertex, i);
+				if(isValidVertex(nextVertex) && !isVisited(nextVertex)) {
+					nextVertex.value = getValue(nextVertex);
+					queue.add(nextVertex);
+					setDistTo(currentVertex, nextVertex);
 				}
-			}			
-		}
-		
-		// Check for unconnected components.
-		for(int verts: this.adjList.keySet()) {
-			if(distToVert.get(verts) == null) {
-				this.distToVert.put(verts, Integer.MAX_VALUE);
 			}
 		}
+		return -1;
+	}
+	
+	private boolean isVisited(Vertex nextVertex) {
+		return distTo[nextVertex.level][nextVertex.row][nextVertex.column] != -1;
 	}
 
-	private void reset() {
-		this.distToVert = new HashMap<Integer, Integer>();
+	private void setDistTo(Vertex currentVertex, Vertex nextVertex) {
+		distTo[nextVertex.level][nextVertex.row][nextVertex.column] = 
+				distTo[currentVertex.level][currentVertex.row][currentVertex.column] + 1;
 	}
+
+	private boolean isValidVertex(Vertex vert) {
+		if(vert.level < this.maxLevel && vert.level >= 0
+		   && vert.row < this.maxRow && vert.row >= 0 
+		   && vert.column < this.maxColumn && vert.column >= 0) {
+			return grid.get(vert.level).get(vert.row).get(vert.column) != '#';
+		}
+			
+		return false;
+	}
+
+	private Vertex move(Vertex currentPoint, int i) {
+		Vertex v = new Vertex();
+		v.level = currentPoint.level + posL[i];
+		v.row = currentPoint.row + posX[i];
+		v.column = currentPoint.column + posY[i];
+		
+		return v;
+	}
+
+	private char getValue(Vertex v) {
+		return grid.get(v.level).get(v.row).get(v.column);
+	}
+
+	public void addEdge(int level, int row, String nextRow) {
+		//.###.
+		List<Character> rowList = new ArrayList<Character>();
+		for(int col = 0; col < nextRow.length(); ++col) {
+			if(nextRow.charAt(col) == 'S') {
+				startPoint = new Vertex(level, row, col, 'S');
+			} else if(nextRow.charAt(col) == 'E') {
+				endPoint = new Vertex(level, row, col, 'E');
+			}
+			rowList.add(nextRow.charAt(col));
+		}
+		grid.get(level).add(rowList);
+	}
+	
 	
 }
 
-class Pair {
-	int fromVert, toVert;
+class Vertex {
+	int level;
+	int row;
+	int column;
+	char value;
 	
-	public Pair(int from, int to) {
-		this.fromVert = from;
-		this.toVert = to;
+	public Vertex(int level, int row, int column, char value) {
+		this.level = level;
+		this.row = row;
+		this.column = column;
+		this.value = value;
+	}
+
+	public Vertex() {}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + column;
+		result = prime * result + level;
+		result = prime * result + row;
+		result = prime * result + value;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Vertex other = (Vertex) obj;
+		if (column != other.column)
+			return false;
+		if (level != other.level)
+			return false;
+		if (row != other.row)
+			return false;
+		if (value != other.value)
+			return false;
+		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "[" + fromVert + " -> " + toVert + "]";
-	}	
+		return "[" + level + ", " + row + ", " + column
+				+ ", " + value + "]";
+	}
+	
 }
