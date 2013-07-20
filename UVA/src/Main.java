@@ -1,84 +1,85 @@
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 public class Main {
+	
+	private static List<int[]> validPositions = new ArrayList<int[]>();
+	private static final int size = 9;
+	private static int [] row = new int [size];
+	
+	public static void main(String[] args) throws NumberFormatException, IOException {
+		
+		Scanner sc= new Scanner(new File("input"));
+		//Scanner sc= new Scanner(System.in);
+		
+		int numCases = sc.nextInt();
+		generateValidQueenPositions();
+		
+		for(int i = 0; i < numCases; ++i) {
+			readGrid(sc);
+			solveGrid();
+		}
+		
+		sc.close();
+	}
 
-	public static void main(String... args) throws FileNotFoundException {
-		//Scanner sc = new Scanner(new File("input"));
-		Scanner sc = new Scanner(System.in);
-		int caseNum = 1;
-		while(true) {
-			int size = sc.nextInt();
-			if(size == 0) break;
-			int [][] grid = new int [size][size];
-			
-			for(int i = 0; i < size; ++i) {
-				for(int j = 0; j < size; ++j) {
-					grid[i][j] = sc.nextInt();
+	
+	private static void generateValidQueenPositions() {
+		int columnNumber = 1;
+		backtracking(columnNumber);
+		
+		for(int i = 0; i < validPositions.size(); ++i ) {
+			System.out.println(Arrays.toString(validPositions.get(i)));
+		}
+	}
+
+	private static void backtracking(int currentColumn) {
+		
+		for(int tryRow = 1; tryRow < size; ++tryRow) {
+			if(isValidPosition(tryRow, currentColumn)) {
+				row[currentColumn] = tryRow;
+				
+				if(currentColumn == size - 1) {
+					validPositions.add(row);
+				} else {
+					backtracking(currentColumn + 1);
 				}
 			}
-			System.out.print("Case " + caseNum + ": ");			
-			processGrid(grid);
-			++caseNum;
 		}
-		sc.close();
-
 	}
 
-	private static void processGrid(int[][] grid) {
-		int left = 0; 
-		int right = grid.length - 1;
-		List<Integer> results = new ArrayList<Integer>();
+
+	private static boolean isValidPosition(int tryRow, int tryCol) {
 		
-		while(left <= right) {			
-			results.add((getRowSum(grid, left, right) + getColSum(grid, left, right)));
-			++left;
-			--right;			
-		}
-		
-		for(int i = 0; i < results.size() - 1; ++i) {
-			System.out.print(results.get(i) + " ");
-		}
-		System.out.println(results.get(results.size() - 1));
-	}
-
-	private static int getColSum(int[][] grid, int left, int right) {
-		int sum = 0; 
-		for(int i = 0; i < grid.length; ++i) {
-			sum += grid[i][left];
-			 grid[i][left] = 0;
-		}
-		
-		for(int i = 0; i < grid.length; ++i) {
-			sum += grid[i][right];
-			grid[i][right] = 0;
-		}
-		return sum;
-	}
-
-	private static int getRowSum(int [][] grid, int top, int bottom) {
-		int sum = 0; 
-		for(int i = 0; i < grid.length; ++i) {
-			sum += grid[top][i] ;
-			grid[top][i] = 0;		
-		}
-		for(int i = 0; i < grid.length; ++i) {
-			sum += grid[bottom][i];
-			grid[bottom][i] = 0;
-		}
-		return sum;
-	}
-
-	private static void printGrid(int[][] grid) {
-		for(int i = 0; i < grid.length; ++i) {
-			for(int j = 0 ; j < grid[i].length; ++j) {
-				System.out.print(grid[i][j] + " ");
+		for(int currentCol = 0; currentCol < tryCol; ++currentCol) {
+			// No Queen exists on the same row.
+			int currentRow = row[currentCol];
+			if(currentRow == tryRow || isOnSameDiagonal(tryRow, tryCol, currentRow, currentCol)) {
+				return false;
 			}
-			System.out.println();
 		}
+		return true;
 	}
-	
+
+
+	private static boolean isOnSameDiagonal(int tryRow, int tryCol, int currentRow, int currentCol) {
+		if(Math.abs(tryRow - currentRow) == Math.abs(tryCol - currentCol)) {			
+			return true;
+		}
+			
+		return false;
+	}
+
+
+	private static void solveGrid() {
+		
+	}
+
+	private static void readGrid(Scanner sc) {
+		
+	}
 }
