@@ -1,85 +1,93 @@
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
+
+// Was solving problem: http://uva.onlinejudge.org/external/105/10507.html.
+// Can't use DisjointSet because I need to figure out of there is a direct edge from sleeping node to an awake node.
+// Disjoint Set only tells if a not is part of a Connected component... So might need to use BreadthFirstSearch instead...?
+
 public class Main {
-	
-	private static List<int[]> validPositions = new ArrayList<int[]>();
-	private static final int size = 9;
-	private static int [] row = new int [size];
+	static int counter = 0;
 	
 	public static void main(String[] args) throws NumberFormatException, IOException {
 		
 		Scanner sc= new Scanner(new File("input"));
 		//Scanner sc= new Scanner(System.in);
-		
-		int numCases = sc.nextInt();
-		generateValidQueenPositions();
-		
-		for(int i = 0; i < numCases; ++i) {
-			readGrid(sc);
-			solveGrid();
-		}
-		
-		sc.close();
-	}
 
-	
-	private static void generateValidQueenPositions() {
-		int columnNumber = 1;
-		backtracking(columnNumber);
-		
-		for(int i = 0; i < validPositions.size(); ++i ) {
-			System.out.println(Arrays.toString(validPositions.get(i)));
-		}
-	}
-
-	private static void backtracking(int currentColumn) {
-		
-		for(int tryRow = 1; tryRow < size; ++tryRow) {
-			if(isValidPosition(tryRow, currentColumn)) {
-				row[currentColumn] = tryRow;
-				
-				if(currentColumn == size - 1) {
-					validPositions.add(row);
-				} else {
-					backtracking(currentColumn + 1);
-				}
-			}
-		}
-	}
-
-
-	private static boolean isValidPosition(int tryRow, int tryCol) {
-		
-		for(int currentCol = 0; currentCol < tryCol; ++currentCol) {
-			// No Queen exists on the same row.
-			int currentRow = row[currentCol];
-			if(currentRow == tryRow || isOnSameDiagonal(tryRow, tryCol, currentRow, currentCol)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-
-	private static boolean isOnSameDiagonal(int tryRow, int tryCol, int currentRow, int currentCol) {
-		if(Math.abs(tryRow - currentRow) == Math.abs(tryCol - currentCol)) {			
-			return true;
-		}
+		while(sc.hasNextLine()) {
+			int size = Integer.parseInt(sc.nextLine());
+			int[] id = new int[size];
+			int[] sz = new int[size];
 			
-		return false;
+			Map<Character, Integer> data = new HashMap<Character, Integer>();
+			
+			for(int i = 0; i < id.length; ++i) {
+				id[i] = i;
+				sz[i] = 1;
+			}
+			
+			int numConnections = Integer.parseInt(sc.nextLine());
+			char[] awake = sc.nextLine().toCharArray();
+			addToMap(data, awake);
+			
+			for(int i = 0; i < numConnections; ++i) {
+				char[] newConnection = sc.nextLine().toCharArray();
+				addToMap(data, newConnection);
+				
+				int p =data.get(newConnection[0]); 
+				int q =data.get(newConnection[1]);
+				
+				//System.out.println("Union: " + newConnection[0] + "=" + p + ", " + newConnection[1] + "=" + q);
+				union(p, q, id, sz);
+			}
+			printMap(data, id, sz);
+		}
 	}
 
-
-	private static void solveGrid() {
-		
+	private static void printMap(Map<Character, Integer> data, int[] id, int[] sz) {
+		System.out.println(Arrays.toString(sz));
+		System.out.println(Arrays.toString(id));
+		for(Character ch : data.keySet()) {
+			System.out.println(ch + " -> " + data.get(ch));
+		}
 	}
 
-	private static void readGrid(Scanner sc) {
-		
+	private static void union(int p, int q, int[] id, int [] sz) {
+		if(!isConnected(p, q, id)) {
+			int idp = root(p, id);
+			int idq = root(q, id);
+
+			if(sz[idp] > sz[idq]) {
+				id[idp] = id [idq];
+				sz[idp] += sz[idq];
+			} else {
+				id[idq] = id[idp];
+				sz[idq] += sz[idp];
+			}
+		}
+	}
+
+	private static boolean isConnected(int p, int q, int[] id) {
+		return root(p, id) == root(q, id);
+	}
+
+	private static int root(int p, int[] id) {
+		while(p != id[p]) {
+			p = id[p];
+		}
+		return p;
+	}
+
+	private static void addToMap(Map<Character, Integer> data, char[] newConnection) {
+		for(Character ch : newConnection) {
+			if(!data.containsKey(ch)) {
+				data.put(ch, counter);
+				++counter;
+			}
+		}
 	}
 }
