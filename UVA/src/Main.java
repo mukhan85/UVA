@@ -6,10 +6,7 @@ import java.util.Map;
 import java.util.Scanner;
 
 
-// Was solving problem: http://uva.onlinejudge.org/external/105/10507.html.
-// Can't use DisjointSet because I need to figure out of there is a direct edge from sleeping node to an awake node.
-// Disjoint Set only tells if a not is part of a Connected component... So might need to use BreadthFirstSearch instead...?
-
+// Next problem is 10507
 public class Main {
 	static int counter = 0;
 	
