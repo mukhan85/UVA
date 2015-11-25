@@ -1,4 +1,4 @@
-package graph;
+package graph.solved;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;

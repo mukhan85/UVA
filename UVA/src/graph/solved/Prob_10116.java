@@ -1,5 +1,4 @@
-package graph;
-import java.io.File;
+package graph.solved;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;

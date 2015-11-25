@@ -1,9 +1,7 @@
-package graph;
+package graph.solved;
 
 import java.awt.Point;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 /**

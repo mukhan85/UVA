@@ -1,9 +1,6 @@
-package graph;
-import java.awt.Point;
-import java.io.File;
+package graph.solved;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
